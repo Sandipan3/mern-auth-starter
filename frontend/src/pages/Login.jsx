@@ -1,77 +1,86 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import api from "../api/api";
+import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { loginUser } from "../slices/authSlice";
+import {
+  login,
+  selectCurrentLoading,
+  selectCurrentError,
+} from "../slice/authSlice";
+import { Link, useNavigate } from "react-router-dom";
 
 const Login = () => {
+  const dispatch = useDispatch();
+  const loading = useSelector(selectCurrentLoading);
+  const error = useSelector(selectCurrentError);
+
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const { loading, error } = useSelector((state) => state.auth);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      // Dispatch the login action and unwrap the result
-      await dispatch(loginUser({ email, password })).unwrap();
-      // Navigate to home page on successful login
+    const resultAction = await dispatch(login({ email, password }));
+
+    if (login.fulfilled.match(resultAction)) {
+      toast.success("Logged in successfully");
       navigate("/");
-    } catch (err) {
-      console.error("Failed to login:", err);
+    } else if (login.rejected.match(resultAction)) {
+      toast.error(resultAction.payload || "Login failed");
     }
   };
-
   return (
-    <div className="flex flex-col w-full max-w-sm">
-      <h1 className="text-xl font-bold mb-1">
-        Sign in to your <br />
-        Skillify account
-      </h1>
-
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="relative">
-          <label className="absolute -top-2 left-3 bg-white px-1 text-xs font-medium text-purple-600">
-            Email Address
+    <section className="flex flex-col gap-y-2">
+      <div className="">
+        <h1 className="font-bold text-center text-2xl m-2 p-2">
+          Login to your <br />
+          <span className="text-purple-500">Skillify</span> Account
+        </h1>
+      </div>
+      <form action="" onSubmit={handleSubmit}>
+        {/* email*/}
+        <div>
+          <label htmlFor="email" className="text-xl font-serif">
+            Email<span className="text-red-700">*</span>
           </label>
+          <br />
           <input
             type="email"
-            value={email}
+            name="email"
+            id="email"
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter email address"
-            required
-            className="w-full border border-gray-300 rounded px-3 pt-3 pb-2 text-sm focus:outline-none"
+            className="border-2 border-purple-400 my-1 w-full rounded-md p-2 focus:outline-purple-700"
           />
         </div>
-
-        <div className="relative">
-          <label className="absolute -top-2 left-3 bg-white px-1 text-xs font-medium text-purple-600">
-            Password
+        {/*password */}
+        <div className="my-3">
+          <label htmlFor="password" className="text-xl font-serif">
+            Password<span className="text-red-700">*</span>
           </label>
+          <br />
           <input
-            type="password"
-            value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter password"
-            required
-            className="w-full border border-gray-300 rounded px-3 pt-3 pb-2 text-sm focus:outline-none"
+            type="password"
+            name="password"
+            id="password"
+            className="border-2 border-purple-400 my-1 w-full rounded-md p-2 focus:outline-purple-700"
           />
         </div>
-
-        {/* Display login error if it exists */}
-        {error && <p className="text-xs text-red-500">{error}</p>}
-
-        <div className="py-2 w-full">
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full block text-center bg-purple-600 text-white py-2 rounded text-sm font-medium disabled:bg-gray-400"
-          >
-            {loading ? "Logging in..." : "Login"}
-          </button>
-        </div>
+        <button
+          type="submit"
+          className="bg-purple-800 text-white w-full rounded-md h-10 cursor-pointer font-sans"
+        >
+          Login
+        </button>
       </form>
-    </div>
+      <p className="text-center font-sans my-2 p-1">
+        New User?
+        <Link to="/register" className="text-purple-700 ">
+          Register
+        </Link>
+      </p>
+    </section>
   );
 };
 

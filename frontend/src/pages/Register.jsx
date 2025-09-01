@@ -1,137 +1,153 @@
-import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-// import { registerUser } from "../store/slices/authSlice"; // You will need to create this thunk
+import React, { useState } from "react";
+import api from "../api/api";
+import toast from "react-hot-toast";
+import { Link, useNavigate } from "react-router-dom";
 
 const Register = () => {
-  const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    password: "",
-    company: "",
-    role: "user", // Default role
-  });
-  const dispatch = useDispatch();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("");
+
   const navigate = useNavigate();
-  // Assuming you have loading/error state for registration
-  // const { loading, error } = useSelector((state) => state.auth);
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // try {
-    //   await dispatch(registerUser(formData)).unwrap();
-    //   alert("Registration successful! Please login.");
-    //   navigate("/login");
-    // } catch (err) {
-    //   console.error("Failed to register:", err);
-    // }
-    console.log("Form data submitted:", formData); // Placeholder action
-    alert("Registration form submitted! (Frontend only)");
-    navigate("/login");
+    try {
+      const res = await api.post("/register", { name, email, password, role });
+      console.log(res.data.data.message);
+      if (res.data.status === "success") {
+        toast.success(res.data.data.message);
+        navigate("/login");
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error.response.data.message);
+    }
   };
 
   return (
-    <div className="flex flex-col px-3 space-y-4">
-      <h1 className="text-lg font-bold mb-1">
-        Create your <br /> Skillify account
-      </h1>
+    <section className="flex flex-col gap-y-2">
+      <div>
+        <h1 className="font-bold text-center text-2xl m-2 p-1">
+          Register your <br />
+          <span className="text-purple-500">Skillify</span> Account
+        </h1>
+      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Full Name */}
-        <div className="relative">
-          <label className="absolute -top-2 left-3 bg-white px-1 text-xs font-medium text-purple-600">
-            Full Name <span className="text-red-600">*</span>
+      <form onSubmit={handleSubmit}>
+        {/* name */}
+        <div>
+          <label htmlFor="name" className="text-xl font-serif">
+            Name<span className="text-red-700">*</span>
           </label>
+          <br />
           <input
             type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Enter full name"
-            required
-            className="w-full border border-gray-300 rounded px-2 pt-2 pb-1 text-sm focus:outline-none"
+            id="name"
+            onChange={(e) => setName(e.target.value)}
+            className="border-2 border-purple-400 my-1 w-full rounded-md p-2 focus:outline-purple-700"
           />
         </div>
 
-        {/* Email */}
-        <div className="relative">
-          <label className="absolute -top-2 left-3 bg-white px-1 text-xs font-medium text-purple-600">
-            Email address <span className="text-red-600">*</span>
+        {/* email */}
+        <div>
+          <label htmlFor="email" className="text-xl font-serif">
+            Email<span className="text-red-700">*</span>
           </label>
+          <br />
           <input
             type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="Enter email address"
-            required
-            className="w-full border border-gray-300 rounded px-2 pt-2 pb-1 text-sm focus:outline-none"
+            id="email"
+            onChange={(e) => setEmail(e.target.value)}
+            className="border-2 border-purple-400 my-1 w-full rounded-md p-2 focus:outline-purple-700"
           />
         </div>
 
-        {/* Password */}
-        <div className="relative">
-          <label className="absolute -top-2 left-3 bg-white px-1 text-xs font-medium text-purple-600">
-            Password <span className="text-red-600">*</span>
+        {/* password */}
+        <div className="my-3">
+          <label htmlFor="password" className="text-xl font-serif">
+            Password<span className="text-red-700">*</span>
           </label>
+          <br />
           <input
             type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="Enter password"
-            required
-            className="w-full border border-gray-300 rounded px-2 pt-2 pb-1 text-sm focus:outline-none"
+            id="password"
+            onChange={(e) => setPassword(e.target.value)}
+            className="border-2 border-purple-400 my-1 w-full rounded-md p-2 focus:outline-purple-700"
           />
         </div>
 
-        {/* Role (assuming agency maps to 'admin' and no maps to 'user') */}
-        <div>
-          <label className="text-xs font-medium text-purple-600 block mb-1">
-            Are you an Agency? <span className="text-red-600">*</span>
+        {/* role */}
+        <div className="my-3">
+          <label className="text-xl font-serif block mb-1">
+            Role<span className="text-red-700">*</span>
           </label>
-          <div className="flex space-x-3 text-sm">
-            <label className="flex items-center space-x-1">
+          <div className="p-2 flex justify-between">
+            <label
+              htmlFor="admin"
+              className="inline-flex items-center gap-2 cursor-pointer"
+            >
               <input
                 type="radio"
                 name="role"
+                id="admin"
                 value="admin"
-                checked={formData.role === "admin"}
-                onChange={handleChange}
-                className="accent-purple-600"
+                checked={role === "admin"}
+                onChange={(e) => setRole(e.target.value)}
+                className="cursor-pointer"
               />
-              <span>Yes</span>
+              Admin
             </label>
-            <label className="flex items-center space-x-1">
+
+            <label
+              htmlFor="student"
+              className="inline-flex items-center gap-2 cursor-pointer"
+            >
               <input
                 type="radio"
                 name="role"
-                value="user"
-                checked={formData.role === "user"}
-                onChange={handleChange}
-                className="accent-purple-600"
+                id="student"
+                value="student"
+                checked={role === "student"}
+                onChange={(e) => setRole(e.target.value)}
+                className="cursor-pointer"
               />
-              <span>No</span>
+              Student
+            </label>
+
+            <label
+              htmlFor="instructor"
+              className="inline-flex items-center gap-2 cursor-pointer"
+            >
+              <input
+                type="radio"
+                name="role"
+                id="instructor"
+                value="instructor"
+                checked={role === "instructor"}
+                onChange={(e) => setRole(e.target.value)}
+                className="cursor-pointer"
+              />
+              Instructor
             </label>
           </div>
         </div>
 
-        <div className="py-2 w-full">
-          <button
-            type="submit"
-            // disabled={loading}
-            className="block text-center w-full bg-purple-600 text-white my-2 p-2 rounded text-sm font-medium disabled:bg-gray-400"
-          >
-            Create Account
-          </button>
-        </div>
+        {/* submit */}
+        <button
+          type="submit"
+          className="bg-purple-800 text-white w-full rounded-md h-10 cursor-pointer font-sans"
+        >
+          Register
+        </button>
+        <p className="text-center font-sans  my-2 p-1">
+          Already a member?
+          <Link to="/login" className="text-purple-700">
+            Login
+          </Link>
+        </p>
       </form>
-    </div>
+    </section>
   );
 };
 

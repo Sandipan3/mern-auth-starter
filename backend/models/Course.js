@@ -1,25 +1,37 @@
-import mongoose, { Mongoose } from "mongoose";
+import mongoose from "mongoose";
 
-const courseSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  description: {
-    type: String,
-    required: false,
-    trim: true,
-  },
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      unique: true,
+    },
 
-export default mongoose.model("Course", courseSchema);
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+
+    password: {
+      type: String,
+      required: true,
+    },
+
+    role: {
+      type: String,
+      enum: ["admin", "instructor", "student"],
+      lowercase: true,
+      default: "student",
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+export default mongoose.model("User", userSchema);

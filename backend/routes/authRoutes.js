@@ -2,17 +2,18 @@ import express from "express";
 import {
   login,
   logout,
-  profile,
-  refreshAccessToken,
+  refreshToken,
   register,
+  profile,
 } from "../controllers/authControllers.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
+
 const router = express.Router();
 
 router.post("/register", register);
 router.post("/login", login);
 router.get("/profile", authMiddleware, profile);
 router.post("/logout", logout);
-router.get("/refresh", refreshAccessToken);
+router.post("/refresh", refreshToken);
 
 export default router;

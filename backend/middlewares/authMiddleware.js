@@ -9,14 +9,18 @@ const authMiddleware = async (req, res, next) => {
     const token = authHeader && authHeader.split(" ")[1];
 
     if (!token) {
-      return res.status(401).json({ message: "Access Token missing" });
+      return res
+        .status(401)
+        .json({ status: "error", message: "No access token" });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_KEY);
     const user = await User.findById(decoded.userId).select("name role");
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res
+        .status(401)
+        .json({ status: "error", message: "User not found" });
     }
 
     req.user = {
@@ -28,8 +32,8 @@ const authMiddleware = async (req, res, next) => {
     next();
   } catch (error) {
     return res
-      .status(403)
-      .json({ message: "Invalid or expired access token", error });
+      .status(401)
+      .json({ status: "error", message: "Invalid or expired access token" });
   }
 };
 

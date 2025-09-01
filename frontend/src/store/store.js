@@ -1,8 +1,8 @@
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
-import { persistStore, persistReducer } from "redux-persist";
+import { authReducer, tokenRefreshed, logoutUser } from "../slice/authSlice";
 import storage from "redux-persist/lib/storage";
-import authReducer, { logout, tokenRefreshed } from "../slices/authSlice"; // Import actions
-import api from "../api/api"; // Import the api instance
+import { persistStore, persistReducer } from "redux-persist";
+import api from "../api/api";
 
 const rootReducer = combineReducers({
   auth: authReducer,
@@ -16,26 +16,17 @@ const persistConfig = {
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
-export const store = configureStore({
+const store = configureStore({
   reducer: persistedReducer,
+  devTools: true,
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      serializableCheck: {
-        ignoredActions: [
-          "persist/PERSIST",
-          "persist/REHYDRATE",
-          "persist/FLUSH",
-          "persist/PURGE",
-        ],
-      },
-    }),
+    getDefaultMiddleware({ serializableCheck: false }),
 });
 
-// ==== SETUP INTERCEPTORS AFTER STORE IS CREATED ====
-// Request interceptor
+// setup interceptor after store is created
 api.interceptors.request.use(
   (config) => {
-    const { token } = store.getState().auth; // Get token from the store
+    const token = store.getState().auth.token;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -44,7 +35,6 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -52,18 +42,22 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        const refreshResponse = await api.get("/auth/refresh");
-        const { accessToken: newToken } = refreshResponse.data;
-        store.dispatch(tokenRefreshed({ token: newToken }));
+        const refreshResponse = await api.post(
+          "/refresh",
+          {},
+          { withCredentials: true }
+        );
+        const newToken = refreshResponse.data.data.accessToken;
+        store.dispatch(tokenRefreshed(newToken));
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return api(originalRequest);
       } catch (err) {
-        store.dispatch(logout());
+        store.dispatch(logoutUser());
       }
     }
     return Promise.reject(error);
   }
 );
-// =====================================================
 
 export const persistor = persistStore(store);
+export default store;

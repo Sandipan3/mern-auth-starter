@@ -3,6 +3,7 @@ import { authReducer, tokenRefreshed, logoutUser } from "../slice/authSlice";
 import storage from "redux-persist/lib/storage";
 import { persistStore, persistReducer } from "redux-persist";
 import api from "../api/api";
+import { encryptTransform } from "redux-persist-transform-encrypt";
 
 const rootReducer = combineReducers({
   auth: authReducer,
@@ -12,6 +13,14 @@ const persistConfig = {
   key: "root",
   storage,
   whitelist: ["auth"],
+  transforms: [
+    encryptTransform({
+      secretKey: import.meta.env.VITE_REDUX_SECRET_KEY,
+      onError: () => {
+        console.log(console.error("Encryption error:", error));
+      },
+    }),
+  ],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

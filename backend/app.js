@@ -5,6 +5,8 @@ import authRoutes from "./routes/authRoutes.js";
 import cookieParser from "cookie-parser";
 import connectDB from "./utils/connectDb.js";
 import errorMiddleware from "./middlewares/errorMiddleware.js";
+import passport from "./middlewares/passport.js";
+import session from "express-session";
 
 // app setup
 const app = express();
@@ -28,11 +30,22 @@ app.use(
 // );
 //=======================================
 
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
+
 // MongoDB Connection
 connectDB();
 
 //routes
-app.use("/api/v1", authRoutes);
+app.use("/api/v1/auth", authRoutes);
 
 app.use(errorMiddleware);
 

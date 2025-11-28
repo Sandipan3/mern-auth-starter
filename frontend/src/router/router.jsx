@@ -5,6 +5,7 @@ import Register from "../pages/Register";
 import ProtectedRoute from "../components/ProtectedRoute";
 import DummyPage from "../components/DummyPage";
 import React from "react";
+import ExternalLoginHandler from "../components/ExternalLoginHandler";
 
 const router = createBrowserRouter([
   {
@@ -17,6 +18,8 @@ const router = createBrowserRouter([
         path: "/unauthorized",
         element: <div className="p-4"> Unauthorized Access</div>,
       },
+      // 🟢 ADDED PUBLIC ROUTE FOR EXTERNAL LOGIN
+      { path: "/auth/callback", element: <ExternalLoginHandler /> },
 
       // Protected Routes (any logged-in user)
       {
@@ -46,6 +49,11 @@ const router = createBrowserRouter([
       {
         element: <ProtectedRoute allowedRoles={["student"]} />,
         children: [{ path: "/s", element: <div>Student Home </div> }],
+      },
+      //  User Only Routes
+      {
+        element: <ProtectedRoute allowedRoles={["user"]} />,
+        children: [{ path: "/u", element: <div>User Dashboard</div> }],
       },
     ],
   },

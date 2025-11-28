@@ -8,9 +8,9 @@ dotenv.config();
 
 // register
 export const register = async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password } = req.body;
 
-  if (!name || !email || !password || !role) {
+  if (!name || !email || !password) {
     return sendErrorResponse(res, "Fields cannot be empty", 403);
   }
 
@@ -40,7 +40,12 @@ export const register = async (req, res) => {
     const saltRounds = parseInt(process.env.BCRYPT_SALT, 10) || 10;
     const hashPassword = await bcrypt.hash(password, saltRounds);
 
-    const user = new User({ name, email, password: hashPassword, role });
+    const user = new User({
+      name,
+      email,
+      password: hashPassword,
+      profileCompleted: false,
+    });
     await user.save();
 
     return sendSuccessResponse(
@@ -147,6 +152,27 @@ export const profile = async (req, res) => {
     }
 
     return sendSuccessResponse(res, user);
+  } catch (error) {
+    return sendErrorResponse(res, "Server error", 500);
+  }
+};
+
+export const googleCallback = (req, res) => {
+  try {
+    const user = req.user;
+
+    const accessToken = generateAccessToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    const redirectUrl = `http://localhost:5173/auth/callback?access_token=${accessToken}`;
+    return res.redirect(redirectUrl);
   } catch (error) {
     return sendErrorResponse(res, "Server error", 500);
   }

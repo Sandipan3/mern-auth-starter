@@ -16,7 +16,7 @@ const persistConfig = {
   transforms: [
     encryptTransform({
       secretKey: import.meta.env.VITE_REDUX_SECRET_KEY,
-      onError: () => {
+      onError: (error) => {
         console.log(console.error("Encryption error:", error));
       },
     }),
@@ -52,7 +52,7 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       try {
         const refreshResponse = await api.post(
-          "/refresh",
+          "/auth/refresh",
           {},
           { withCredentials: true }
         );

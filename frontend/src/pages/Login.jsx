@@ -1,82 +1,103 @@
 import React, { useState } from "react";
-import api from "../api/api";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import {
   login,
-  selectCurrentLoading,
-  selectCurrentError,
+  getUser,
+  selectCurrentUser,
+  selectIsAuthenticated,
 } from "../slice/authSlice";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 
 const Login = () => {
   const dispatch = useDispatch();
-  const loading = useSelector(selectCurrentLoading);
-  const error = useSelector(selectCurrentError);
-
   const navigate = useNavigate();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const user = useSelector(selectCurrentUser);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  // Redirect if already logged in
+  if (isAuthenticated && user) {
+    return <Navigate to="/" replace />;
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!email || !password) {
+      toast.error("All fields are required!");
+      return;
+    }
+
     const resultAction = await dispatch(login({ email, password }));
 
     if (login.fulfilled.match(resultAction)) {
-      toast.success("Logged in successfully");
-      navigate("/");
-    } else if (login.rejected.match(resultAction)) {
+      await dispatch(getUser());
+      toast.success("Welcome back!");
+
+      const role = user?.role;
+
+      switch (role) {
+        case "admin":
+          navigate("/a");
+          break;
+        case "instructor":
+          navigate("/i");
+          break;
+        case "student":
+          navigate("/s");
+          break;
+        default:
+          navigate("/");
+      }
+    } else {
       toast.error(resultAction.payload || "Login failed");
     }
   };
+
   return (
     <section className="flex flex-col gap-y-2">
-      <div className="">
+      <div>
         <h1 className="font-bold text-center text-2xl m-2 p-2">
           Login to your <br />
           <span className="text-purple-500">Skillify</span> Account
         </h1>
       </div>
-      <form action="" onSubmit={handleSubmit}>
-        {/* email*/}
+
+      <form onSubmit={handleSubmit}>
         <div>
-          <label htmlFor="email" className="text-xl font-serif">
-            Email<span className="text-red-700">*</span>
-          </label>
-          <br />
+          <label htmlFor="email">Email *</label>
           <input
             type="email"
-            name="email"
             id="email"
             onChange={(e) => setEmail(e.target.value)}
-            className="border-2 border-purple-400 my-1 w-full rounded-md p-2 focus:outline-purple-700"
+            className="border-2 border-purple-400 my-1 w-full rounded-md p-2"
           />
         </div>
-        {/*password */}
+
         <div className="my-3">
-          <label htmlFor="password" className="text-xl font-serif">
-            Password<span className="text-red-700">*</span>
-          </label>
-          <br />
+          <label htmlFor="password">Password *</label>
           <input
-            onChange={(e) => setPassword(e.target.value)}
             type="password"
-            name="password"
             id="password"
-            className="border-2 border-purple-400 my-1 w-full rounded-md p-2 focus:outline-purple-700"
+            onChange={(e) => setPassword(e.target.value)}
+            className="border-2 border-purple-400 my-1 w-full rounded-md p-2"
           />
         </div>
+
         <button
           type="submit"
-          className="bg-purple-800 text-white w-full rounded-md h-10 cursor-pointer font-sans"
+          className="bg-purple-800 text-white w-full rounded-md h-10"
         >
           Login
         </button>
       </form>
-      <p className="text-center font-sans my-2 p-1">
-        New User?
-        <Link to="/register" className="text-purple-700 ">
+
+      <p className="text-center">
+        New User?{" "}
+        <Link to="/register" className="text-purple-700">
           Register
         </Link>
       </p>
